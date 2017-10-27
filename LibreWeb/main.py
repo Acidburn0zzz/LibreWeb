@@ -1,9 +1,9 @@
-# import uno
+#
 
 ctx = XSCRIPTCONTEXT.getComponentContext()
 desktop = XSCRIPTCONTEXT.getDesktop()
 document = XSCRIPTCONTEXT.getDocument()
-from messagebox import MsgBox,INFOBOX,WARNINGBOX,QUERYBOX
+from messagebox import MsgBox, INFOBOX, WARNINGBOX, QUERYBOX
 from tools import do_update
 
 msg_box = MsgBox(desktop)
@@ -112,17 +112,48 @@ def Export_Web_Settings(*args):
 def Verify_Update(*args):
     from tools import _verify_update
     if not (_verify_update(ctx, msg_box)):
-        msg_box.show("No update available","Message",INFOBOX)
+        msg_box.show("No update available", "Message", INFOBOX)
+
 
 def Download_Help_File(*args):
     from settings import url_help_file
     import webbrowser
     webbrowser.open(url_help_file)
 
+
+def Donate_Paypal(*args):
+    from settings import url_paypal
+    import webbrowser
+    webbrowser.open(url_paypal)
+
+
 def About(*args):
     from tools import get_cur_version
     current_version = get_cur_version(ctx)
     msg_box.show("An internet tool for LibreOffice.\n" +
                  "Current version : " + current_version, "LibreWeb", INFOBOX)
+
+
+def Send_Email(*args):
+    '''Send me an email'''
+    from messagebox import BUTTONS_OK_CANCEL, CANCEL, QUERYBOX
+    from dialog import DialogModel, get_dialog_control
+    from dialogsendemail import dialog_model_props, dialog_items
+    from listeners import SendEmailButtonListener
+    if msg_box.show(
+            "For a correct work of this feature \n you must have an email client.\n Continue ?",
+            "Email client ", QUERYBOX, BUTTONS_OK_CANCEL) == CANCEL:
+        return
+    # create dialog
+    dialog_instance = DialogModel(ctx, dialog_model_props)
+    dialog_instance.add_elements(dialog_items)
+    dialog_control = get_dialog_control(ctx, dialog_instance.model)
+    SendButton_control = dialog_control.getControl("SendButton")
+    Subject_control = dialog_control.getControl("Subject")
+    Message_control = dialog_control.getControl("Message")
+    SendButton_control.addActionListener(
+        SendEmailButtonListener(ctx, Subject_control, Message_control, msg_box)
+    )
+    dialog_control.execute()
 
 # End of script
