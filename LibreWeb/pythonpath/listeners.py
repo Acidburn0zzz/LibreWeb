@@ -127,6 +127,31 @@ class CheckURLListener(unohelper.Base, XActionListener):
                     self.TagCount_ctrl.setEnable(True)
         else:
             self.msg_box.show("Not supported tag!", "Attention!", 2)
-        self.msg_box.show("Operation completed.", "Message",1)
+        self.msg_box.show("Operation completed.", "Message", 1)
+
     def disposing(self, event):
         pass
+
+
+class SendEmailButtonListener(unohelper.Base, XActionListener):
+    '''A listener for send email button,it takes as
+    arguments two text-fields objects,a messagebox object and ctx'''
+
+    def __init__(self, ctx, subject, message, msgbox):
+        self.ctx = ctx
+        self.subject = subject
+        self.message = message
+        self.msgbox = msgbox
+
+    def actionPerformed(self, event):
+        if self.message.Text.strip() == "" or self.subject.Text.strip() == "":
+            self.msgbox.show("Please fill all fields!", "Attention", 2)
+        else:
+            from tools import send_mail
+            try:
+                send_mail(self.ctx, self.subject.Text.strip(), self.message.Text.strip())
+                self.subject.Text = ""
+                self.message.Text = ""
+            except:
+
+                pass

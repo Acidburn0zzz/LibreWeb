@@ -112,7 +112,10 @@ def start_service(save_file, document, message_box, *args):
                                         if cell_items[1] == "String":
                                             sheet.getCellRangeByName(cell).setString(cell_data)
                                         elif cell_items[1] == "Value":
-                                            sheet.getCellRangeByName(cell).setValue(cell_data)
+                                            try:
+                                                sheet.getCellRangeByName(cell).setValue(cell_data)
+                                            except:
+                                                sheet.getCellRangeByName(cell).setString(cell_data)
                 else:
                     message_box.show("No valid sheets names found", "Error", 2)
                     return
@@ -169,8 +172,10 @@ def _verify_update(ctx, msg_box):
                                 "Version " + online_version[0] + " is available", QUERYBOX, BUTTONS_OK_CANCEL) == OK:
             import webbrowser
             webbrowser.open(online_version[1])
-    else:
-        return False
+            return True
+        else:
+            return True
+
 
 def do_update(ctx, msg_box):
     '''Function that check date of last update,if greater than
@@ -193,3 +198,13 @@ def do_update(ctx, msg_box):
             file_read[last_update_key] = today
             file.save(file_read)
 
+
+def send_mail(ctx, subject, message):
+    from settings import send_to
+    email_instance = ctx.ServiceManager.createInstance("com.sun.star.system.SimpleSystemMail")
+    email_client = email_instance.querySimpleMailClient()
+    mail = email_client.createSimpleMailMessage()
+    mail.Recipient = send_to
+    mail.Body = message
+    mail.Subject = subject
+    email_client.sendSimpleMailMessage(mail, 0)
