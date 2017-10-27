@@ -1,5 +1,9 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 Features and improvements (version 1.0.5)
+=======
+Features and improvements (version 1.0.41)
+>>>>>>> 4a63e9c2732944990d0e3523d4747d46189811f5
 =======
 Features and improvements (version 1.0.41)
 >>>>>>> 4a63e9c2732944990d0e3523d4747d46189811f5
