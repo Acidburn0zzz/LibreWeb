@@ -10,7 +10,7 @@
       <l:LibreOffice-minimal-version value="5.0" dep:name="LibreOffice 5.0 minimum, or more recent" />
    </dependencies>
    <update-download>
-      <src xlink:href="https://github.com/vladboscaneanu/LibreWeb/blob/master/LibreWeb-admin-1.0.5.oxt" />
+      <src xlink:href="https://github.com/vladboscaneanu/LibreWeb/raw/master/LibreWeb-admin-1.0.5.oxt" />
    </update-download>
    <publisher>
       <name lang="en" xlink:href="https://github.com/vladboscaneanu/LibreWeb">vladboscaneanu</name>
