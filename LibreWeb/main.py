@@ -4,7 +4,12 @@ ctx = XSCRIPTCONTEXT.getComponentContext()
 smgr = ctx.ServiceManager
 desktop = XSCRIPTCONTEXT.getDesktop()
 document = XSCRIPTCONTEXT.getDocument()
+<<<<<<< HEAD
 from messagebox import MsgBox, INFOBOX, WARNINGBOX, QUERYBOX, BUTTONS_OK_CANCEL, OK
+=======
+from messagebox import MsgBox, INFOBOX, WARNINGBOX, QUERYBOX
+from tools import do_update
+>>>>>>> 721085a04db3e6251f5fb47cebfd1cf460491dae
 
 msg_box = MsgBox(desktop)
 
@@ -106,6 +111,7 @@ def Export_Web_Settings(*args):
 
 
 def Verify_Update(*args):
+<<<<<<< HEAD
     from tools import verify_update
     if not (verify_update(ctx, msg_box)):
         msg_box.show("No update available", "Message", INFOBOX)
@@ -115,6 +121,19 @@ def Read_Help(*args):
     from tools import get_help_file
     from settings import extension_id, help_file
     get_help_file(smgr, desktop, extension_id, help_file)
+
+=======
+    from tools import _verify_update
+    if not (_verify_update(ctx, msg_box)):
+        msg_box.show("No update available", "Message", INFOBOX)
+
+>>>>>>> 721085a04db3e6251f5fb47cebfd1cf460491dae
+
+def Donate_Paypal(*args):
+    from settings import url_paypal
+    import webbrowser
+    webbrowser.open(url_paypal)
+
 
 
 def Donate_Paypal(*args):
@@ -152,6 +171,7 @@ def Send_Email(*args):
     )
     dialog_control.execute()
 
+<<<<<<< HEAD
 
 def Import_Old_Data(*args):
     import os
@@ -183,4 +203,6 @@ def Import_Old_Data(*args):
     else:
         msg_box.show("No local data found", "Message", INFOBOX)
 
+=======
+>>>>>>> 721085a04db3e6251f5fb47cebfd1cf460491dae
 # End of script
