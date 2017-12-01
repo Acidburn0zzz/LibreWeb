@@ -23,21 +23,11 @@ def get_save_dir(ctx):
     return save_dir
 
 
-def get_save_file(ctx, msg_box):
+def get_local_data(ctx):
     '''Returns the save file '''
     from settings import save_file_name
     import os.path
-    file_url = os.path.join(get_save_dir(ctx), save_file_name)
-    if not os.path.isfile(file_url):
-        try:
-            from savemodule import LibreWebPickle
-            file = LibreWebPickle(file_url)
-            file.save({})
-        except OSError as error:
-            if error.errno == 13:
-                msg_box.show("You have no rights to create settings file",
-                             "Attention, 2")
-    return file_url
+    return os.path.join(get_save_dir(ctx), save_file_name)
 
 
 def get_settings_file(ctx, msg_box):
@@ -82,48 +72,47 @@ def open_url(url, message_box, default_decoding="utf-8"):
             message_box.show(str_error, "Attention", 2)
 
 
-def start_service(save_file, document, message_box, *args):
+def start_service(smgr, document, message_box, *args):
     try:
-        from savemodule import LibreWebPickle
+        from docsave import read_file, check_save_file
         from parsermodule import LibreWebParser
 
-        documents = LibreWebPickle(save_file).read()
-        doc_title = document.getTitle()
-
-        if doc_title in documents:
-            sheets = document.Sheets.ElementNames
-            sheets_list = list(documents[doc_title].keys())
-            for sheet_name in sheets_list:
-                if sheet_name in sheets:
-                    sheet = document.Sheets.getByName(sheet_name)
-                    url_list = list(documents[doc_title][sheet_name].keys())
-                    for url in url_list:
-                        result = open_url(url, message_box)
-                        if result:
-                            tag_list = list(documents[doc_title][sheet_name][url].keys())
-                            for tag in tag_list:
-                                my_parser = LibreWebParser(tag)
-                                my_parser.feed(result)
-                                if my_parser.collectedData:
-                                    cell_list = list(documents[doc_title][sheet_name][url][tag].keys())
-                                    for cell in cell_list:
-                                        cell_items = documents[doc_title][sheet_name][url][tag][cell]
-                                        cell_data = my_parser.collectedData[cell_items[0]]
-                                        if cell_items[1] == "String":
-                                            sheet.getCellRangeByName(cell).setString(cell_data)
-                                        elif cell_items[1] == "Value":
-                                            sheet.getCellRangeByName(cell).setValue(cell_data)
-                else:
-                    message_box.show("No valid sheets names found", "Error", 2)
-                    return
-
-            message_box.show("Operation completed.", "Message", 1)
-
+        if check_save_file(document):
+            stored_data = read_file(smgr, document)
         else:
-            message_box.show("This document has no saved data,go to Settings", "Attention", 1)
+            message_box.show("This document has no saved data, \n please select Set data from menu.", "Attention", 1)
+            return
 
-    except FileNotFoundError:
-        message_box.show("No settings file detected,first save some data!", "Attention", 2)
+        sheets = document.Sheets.ElementNames
+        stored_sheets = list(stored_data.keys())
+        for sheet_name in stored_sheets:
+            if sheet_name in sheets:
+                sheet = document.Sheets.getByName(sheet_name)
+                url_list = list(stored_data[sheet_name].keys())
+                for url in url_list:
+                    result = open_url(url, message_box)
+                    if result:
+                        tag_list = list(stored_data[sheet_name][url].keys())
+                        for tag in tag_list:
+                            my_parser = LibreWebParser(tag)
+                            my_parser.feed(result)
+                            if my_parser.collectedData:
+                                cell_list = list(stored_data[sheet_name][url][tag].keys())
+                                for cell in cell_list:
+                                    cell_items = stored_data[sheet_name][url][tag][cell]
+                                    cell_data = my_parser.collectedData[cell_items[0]]
+                                    if cell_items[1] == "String":
+                                        sheet.getCellRangeByName(cell).setString(cell_data)
+                                    elif cell_items[1] == "Value":
+                                        try:
+                                            sheet.getCellRangeByName(cell).setValue(cell_data)
+                                        except:
+                                            sheet.getCellRangeByName(cell).setString(cell_data)
+
+        message_box.show("Operation completed.", "Message", 1)
+
+    except:
+        message_box.show("Error on start_service", "Attention", 2)
 
 
 def get_cur_version(ctx):
@@ -134,6 +123,16 @@ def get_cur_version(ctx):
     for i in ext.ExtensionList:
         if "com.libreweb.web" in i[0]:
             return i[1]
+
+
+def get_help_file(smgr, desktop, ext_id, help_name):
+    '''Open help file'''
+    ext = smgr.createInstance(
+        "com.sun.star.comp.deployment.PackageInformationProvider"
+    )
+    ext_url = ext.getPackageLocation(ext_id)
+    help_url = "{}/{}".format(ext_url, help_name)
+    desktop.loadComponentFromURL(help_url, "_blanc", 0, [])
 
 
 def get_online_version():
@@ -156,7 +155,7 @@ def get_online_version():
         pass
 
 
-def _verify_update(ctx, msg_box):
+def verify_update(ctx, msg_box):
     '''Function that asks for download if a new version is
        available,if positive answer opens a web page with new version.'''
     from messagebox import BUTTONS_OK_CANCEL, OK, QUERYBOX
@@ -169,12 +168,15 @@ def _verify_update(ctx, msg_box):
                                 "Version " + online_version[0] + " is available", QUERYBOX, BUTTONS_OK_CANCEL) == OK:
             import webbrowser
             webbrowser.open(online_version[1])
-    else:
-        return False
+            return True
+        else:
+            return True
 
+
+# version 1.0.7
+'''
 def do_update(ctx, msg_box):
-    '''Function that check date of last update,if greater than
-       a settings value, does the '''
+    
     from datetime import date
     from savemodule import LibreWebPickle
     from settings import last_update_key, check_update_period
@@ -192,4 +194,15 @@ def do_update(ctx, msg_box):
             _verify_update(ctx, msg_box)
             file_read[last_update_key] = today
             file.save(file_read)
+'''
 
+
+def send_mail(ctx, subject, message):
+    from settings import send_to
+    email_instance = ctx.ServiceManager.createInstance("com.sun.star.system.SimpleSystemMail")
+    email_client = email_instance.querySimpleMailClient()
+    mail = email_client.createSimpleMailMessage()
+    mail.Recipient = send_to
+    mail.Body = message
+    mail.Subject = subject
+    email_client.sendSimpleMailMessage(mail, 0)

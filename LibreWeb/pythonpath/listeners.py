@@ -1,5 +1,3 @@
-import os
-
 import unohelper
 from com.sun.star.awt import XActionListener
 from settings import _collected_items
@@ -24,70 +22,74 @@ class TagCountListener(unohelper.Base, XActionListener):
 
 # -- SaveButtonListener
 class SaveButtonListener(unohelper.Base, XActionListener):
-    def __init__(self, msg_box, save_file, document,
+    def __init__(self, msg_box, smgr, document,
                  ColumnListBox_ctrl, RowListBox_ctrl,
                  TagCount_ctrl, ElementToSearch_ctrl,
                  URLTextBox_ctrl, DataTypeListBox_ctrl):
         from tools import open_url
-        from savemodule import LibreWebPickle, insert_data
+        from savemodule import insert_data
+        # version 1.0.7
+        from docsave import save_file, read_file, check_save_file
         from settings import tags
 
         self.open_url = open_url
         self.insert_data = insert_data
-        self.doc = document
+        self.document = document
         self.ColumnListBox_ctrl = ColumnListBox_ctrl
         self.RowList_ctrl = RowListBox_ctrl
         self.TagCount_ctrl = TagCount_ctrl
         self.ElementToSearch_ctrl = ElementToSearch_ctrl
         self.URLTextBox_ctrl = URLTextBox_ctrl
         self.DataTypeListBox_ctrl = DataTypeListBox_ctrl
-        self.sv_file = save_file
-
-        self.save_ins = LibreWebPickle(self.sv_file)
+        self.smgr = smgr
+        self.read_file = read_file
+        self.check_save_file = check_save_file
+        self.save_file = save_file
         self.msg_box = msg_box
-
         self.tags = tags
 
     def actionPerformed(self, event):
         # Check if file for save data exists,otherwise let's create
 
-        if os.path.isfile(self.sv_file):
-            try:
-                if self.ColumnListBox_ctrl.getSelectedItemPos() == -1:
-                    self.msg_box.show("Please select a column", "Error", 2)
-                elif self.RowList_ctrl.getSelectedItemPos() == -1:
-                    self.msg_box.show("Please select  a row", "Error", 2)
-                elif self.TagCount_ctrl.getSelectedItemPos() == -1:
-                    self.msg_box.show("Please select a tag number", "Error", 2)
-                elif self.ElementToSearch_ctrl.Text.strip() not in self.tags:
-                    self.msg_box.show("Not supported tag", "Attention", 2)
-                elif not self.open_url(self.URLTextBox_ctrl.Text.strip(), self.msg_box):
-                    pass
-                elif self.DataTypeListBox_ctrl.getSelectedItemPos() == -1:
-                    self.msg_box.show("Please select type of inserted data",
-                                      "Attention", 2)
+        try:
+            if self.ColumnListBox_ctrl.getSelectedItemPos() == -1:
+                self.msg_box.show("Please select a column", "Error", 2)
+            elif self.RowList_ctrl.getSelectedItemPos() == -1:
+                self.msg_box.show("Please select  a row", "Error", 2)
+            elif self.TagCount_ctrl.getSelectedItemPos() == -1:
+                self.msg_box.show("Please select a tag number", "Error", 2)
+            elif self.ElementToSearch_ctrl.Text.strip() not in self.tags:
+                self.msg_box.show("Not supported tag", "Attention", 2)
+            elif not self.open_url(self.URLTextBox_ctrl.Text.strip(), self.msg_box):
+                pass
+            elif self.DataTypeListBox_ctrl.getSelectedItemPos() == -1:
+                self.msg_box.show("Please select type of inserted data",
+                                  "Attention", 2)
+            else:
+                # start to save our data
+                # version 1.0.7
+                if self.check_save_file(self.document):
+                    saved_data = self.read_file(self.smgr, self.document)
                 else:
-                    # start to save our data
-                    docs = self.save_ins.read()
-                    sheet_name = self.doc.getCurrentController().ActiveSheet.Name
-                    url = self.URLTextBox_ctrl.Text
-                    tag = self.ElementToSearch_ctrl.Text
-                    array_nr = self.TagCount_ctrl.getSelectedItemPos()
-                    column = str(self.ColumnListBox_ctrl.getSelectedItem())
-                    row = str(self.RowList_ctrl.getSelectedItem())
-                    cell_address = column + row
-                    insert_as = self.DataTypeListBox_ctrl.getSelectedItem()
-                    # insert_data is a function, that create our new entry in savefile
-                    doc_title = self.doc.getTitle()
-                    new_docs = self.insert_data(docs, doc_title, sheet_name, url, tag, array_nr, cell_address,
-                                                insert_as)
-                    # then save all data
-                    self.save_ins.save(new_docs)
-                    self.msg_box.show("Operation Completed!", "Well done", 1)
-            except OSError as error:
-                if error.errno == 13:
-                    self.msg_box.show("You have no rights to insert new data",
-                                      "Attention", 2)
+                    saved_data = {}
+                sheet_name = self.document.getCurrentController().ActiveSheet.Name
+                url = self.URLTextBox_ctrl.Text
+                tag = self.ElementToSearch_ctrl.Text
+                array_nr = self.TagCount_ctrl.getSelectedItemPos()
+                column = str(self.ColumnListBox_ctrl.getSelectedItem())
+                row = str(self.RowList_ctrl.getSelectedItem())
+                cell_address = column + row
+                insert_as = self.DataTypeListBox_ctrl.getSelectedItem()
+                # insert_data is a function, that create our new entry in savefile
+                new_data = self.insert_data(saved_data, sheet_name, url, tag, array_nr, cell_address,
+                                            insert_as)
+                # then save all data
+                self.save_file(self.smgr, self.document, new_data)
+                self.msg_box.show("Operation Completed!", "Well done", 1)
+        except OSError as error:
+            if error.errno == 13:
+                self.msg_box.show("You have no rights to insert new data",
+                                  "Attention", 2)
 
     def disposing(self, event):
         pass
@@ -127,6 +129,31 @@ class CheckURLListener(unohelper.Base, XActionListener):
                     self.TagCount_ctrl.setEnable(True)
         else:
             self.msg_box.show("Not supported tag!", "Attention!", 2)
-        self.msg_box.show("Operation completed.", "Message",1)
+        self.msg_box.show("Operation completed.", "Message", 1)
+
     def disposing(self, event):
         pass
+
+
+class SendEmailButtonListener(unohelper.Base, XActionListener):
+    '''A listener for send email button,it takes as
+    arguments two text-fields objects,a messagebox object and ctx'''
+
+    def __init__(self, ctx, subject, message, msgbox):
+        self.ctx = ctx
+        self.subject = subject
+        self.message = message
+        self.msgbox = msgbox
+
+    def actionPerformed(self, event):
+        if self.message.Text.strip() == "" or self.subject.Text.strip() == "":
+            self.msgbox.show("Please fill all fields!", "Attention", 2)
+        else:
+            from tools import send_mail
+            try:
+                send_mail(self.ctx, self.subject.Text.strip(), self.message.Text.strip())
+                self.subject.Text = ""
+                self.message.Text = ""
+            except:
+
+                pass
