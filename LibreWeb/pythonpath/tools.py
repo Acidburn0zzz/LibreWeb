@@ -77,7 +77,6 @@ def start_service(smgr, document, message_box, *args):
         from docsave import read_file, check_save_file
         from parsermodule import LibreWebParser
 
-<<<<<<< HEAD
         if check_save_file(document):
             stored_data = read_file(smgr, document)
         else:
@@ -109,42 +108,6 @@ def start_service(smgr, document, message_box, *args):
                                             sheet.getCellRangeByName(cell).setValue(cell_data)
                                         except:
                                             sheet.getCellRangeByName(cell).setString(cell_data)
-=======
-        documents = LibreWebPickle(save_file).read()
-        doc_title = document.getTitle()
-
-        if doc_title in documents:
-            sheets = document.Sheets.ElementNames
-            sheets_list = list(documents[doc_title].keys())
-            for sheet_name in sheets_list:
-                if sheet_name in sheets:
-                    sheet = document.Sheets.getByName(sheet_name)
-                    url_list = list(documents[doc_title][sheet_name].keys())
-                    for url in url_list:
-                        result = open_url(url, message_box)
-                        if result:
-                            tag_list = list(documents[doc_title][sheet_name][url].keys())
-                            for tag in tag_list:
-                                my_parser = LibreWebParser(tag)
-                                my_parser.feed(result)
-                                if my_parser.collectedData:
-                                    cell_list = list(documents[doc_title][sheet_name][url][tag].keys())
-                                    for cell in cell_list:
-                                        cell_items = documents[doc_title][sheet_name][url][tag][cell]
-                                        cell_data = my_parser.collectedData[cell_items[0]]
-                                        if cell_items[1] == "String":
-                                            sheet.getCellRangeByName(cell).setString(cell_data)
-                                        elif cell_items[1] == "Value":
-                                            try:
-                                                sheet.getCellRangeByName(cell).setValue(cell_data)
-                                            except:
-                                                sheet.getCellRangeByName(cell).setString(cell_data)
-                else:
-                    message_box.show("No valid sheets names found", "Error", 2)
-                    return
-
-            message_box.show("Operation completed.", "Message", 1)
->>>>>>> 721085a04db3e6251f5fb47cebfd1cf460491dae
 
         message_box.show("Operation completed.", "Message", 1)
 
@@ -231,10 +194,7 @@ def do_update(ctx, msg_box):
             _verify_update(ctx, msg_box)
             file_read[last_update_key] = today
             file.save(file_read)
-<<<<<<< HEAD
 '''
-=======
->>>>>>> 721085a04db3e6251f5fb47cebfd1cf460491dae
 
 
 def send_mail(ctx, subject, message):
