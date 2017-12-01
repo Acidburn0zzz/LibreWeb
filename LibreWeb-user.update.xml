@@ -5,20 +5,12 @@
  xmlns:l="http://libreoffice.org/extensions/description/2011"
  xmlns:xlink="http://www.w3.org/1999/xlink" >
    <identifier value="com.libreweb.web" />
-<<<<<<< HEAD
    <version value="1.0.7" />
-=======
-   <version value="1.0.6" />
->>>>>>> 721085a04db3e6251f5fb47cebfd1cf460491dae
    <dependencies>
       <l:LibreOffice-minimal-version value="5.0" dep:name="LibreOffice 5.0 minimum, or more recent" />
    </dependencies>
    <update-download>
-<<<<<<< HEAD
       <src xlink:href="https://github.com/vladboscaneanu/LibreWeb/raw/master/LibreWeb-user-1.0.7.oxt" />
-=======
-      <src xlink:href="https://github.com/vladboscaneanu/LibreWeb/raw/master/LibreWeb-user-1.0.6.oxt" />
->>>>>>> 721085a04db3e6251f5fb47cebfd1cf460491dae
    </update-download>
    <publisher>
       <name lang="en" xlink:href="https://github.com/vladboscaneanu/LibreWeb">vladboscaneanu</name>
